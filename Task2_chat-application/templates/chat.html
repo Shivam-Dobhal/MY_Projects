@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room - {{ room }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color:rgba(194, 171, 171, 0.188);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color:white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: black;
+            margin-bottom: 20px;
+        }
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid rgb(233, 229, 229);
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: white;
+        }
+        #message_input_form {
+            display: flex;
+            align-items: center;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(205, 204, 204, 0.838);
+            border-radius: 4px;
+            margin-right: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color:blue;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color:blueviolet;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h1>Welcome to chat room {{ room }}</h1>
+        <div id="messages"></div>
+        <form id="message_input_form" onsubmit="return false;">
+            <input type="text" id="message_input" placeholder="Enter your message here" required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('connect', () => {
+            socket.emit('join_room', {
+                username: "{{ username }}",
+                room: "{{ room }}"
+            });
+
+            const messageInput = document.getElementById('message_input');
+
+            document.getElementById('message_input_form').onsubmit = (e) => {
+                e.preventDefault();
+                const message = messageInput.value.trim();
+                if (message) {
+                    socket.emit('send_message', {
+                        username: "{{ username }}",
+                        room: "{{ room }}",
+                        message: message
+                    });
+                    messageInput.value = '';
+                    messageInput.focus();
+                }
+            };
+        });
+
+        window.onbeforeunload = () => {
+            socket.emit('leave_room', {
+                username: "{{ username }}",
+                room: "{{ room }}"
+            });
+        };
+
+        socket.on('receive_message', (data) => {
+            const newNode = document.createElement('div');
+            newNode.innerHTML = `<b>${data.username}:</b> ${data.message}`;
+            document.getElementById('messages').appendChild(newNode);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        });
+
+        socket.on('join_room_announcement', (data) => {
+            if (data.username !== "{{ username }}") {
+                const newNode = document.createElement('div');
+                newNode.innerHTML = `<b>${data.username}</b> has joined the room`;
+                document.getElementById('messages').appendChild(newNode);
+                document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+            }
+        });
+
+        socket.on('leave_room_announcement', (data) => {
+            const newNode = document.createElement('div');
+            newNode.innerHTML = `<b>${data.username}</b> has left the room`;
+            document.getElementById('messages').appendChild(newNode);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        });
+    </script>
+</body>
+</html>
