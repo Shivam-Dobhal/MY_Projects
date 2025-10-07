@@ -1,5 +1,6 @@
 # Task 2 : CHAT APPLICATION USING FLASK
 #%%
+import os
 from flask import Flask, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, join_room, leave_room
 
@@ -73,9 +74,17 @@ def handle_leave_room_event(data):
         socketio.emit('leave_room_announcement', data, room=room)
 
 # entry point of the application
-if __name__ == '__main__':
+#if __name__ == '__main__':
     # run the application 
-    socketio.run(app, debug=True)
+#    socketio.run(app, debug=True)
+
+
+
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))  # Use platform-provided port or default 5000
+    socketio.run(app, host='0.0.0.0', port=port)
+
     
 
 
